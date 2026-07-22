@@ -1,0 +1,5 @@
+# Registry publishing keypair. `key.pem` is the sole proof of ownership of the `io.mediawork`
+# namespace — anyone holding it can republish the listing under our name. It belongs in 1Password,
+# never in the repo. `.mcpregistry_*` are the publisher CLI's session tokens.
+key.pem
+.mcpregistry_*

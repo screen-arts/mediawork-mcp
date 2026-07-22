@@ -2,6 +2,7 @@ import "server-only";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { DIRECTORY_PAGE_SIZE, getFacility, getPlaces, getServices, searchFacilities } from "@/lib/directory-api";
+import { matchPlaceQuery } from "@/mcp/place-query";
 import { shapeFacilityCard, shapeFacilityProfile, shapePlace, shapeService } from "@/mcp/shape";
 import { json, LOCALE_ARG, notFound } from "@/mcp/tools/common";
 
@@ -38,9 +39,14 @@ export function registerDirectoryTools(server: McpServer) {
             description:
                 "Search publicly listed post-production facilities, distribution vendors and creative companies. " +
                 "Filter by free text, by place slug (from list_places) and by service uuid (from list_services). " +
-                "Results are paginated; when `hasMore` is true, call again with the returned `nextOffset`.",
+                "To find vendors somewhere, prefer `place`; a `query` naming a place is treated as one anyway, and " +
+                "the response reports it as `resolvedPlace`. Results are paginated; when `hasMore` is true, call " +
+                "again with the returned `nextOffset`.",
             inputSchema: {
-                query: z.string().optional().describe("Free text matched against facility and company names"),
+                query: z
+                    .string()
+                    .optional()
+                    .describe("Free text matched against facility and company names, or a place name"),
                 place: z.string().optional().describe("A place slug from list_places"),
                 service: z.string().optional().describe("A service uuid from list_services"),
                 offset: z.number().int().min(0).optional().describe("Result offset for pagination"),
@@ -48,10 +54,23 @@ export function registerDirectoryTools(server: McpServer) {
             },
         },
         async ({ query, place, service, offset, locale }) => {
-            const list = await searchFacilities({ query, placeSlug: place, serviceUuid: service, offset });
+            // A query that names a place becomes the place filter, and stops being a name search —
+            // keeping both would AND them together and return nothing, which is the very failure
+            // this resolves.
+            const resolved = place ? null : matchPlaceQuery(await getPlaces(), query);
+
+            const list = await searchFacilities({
+                query: resolved ? undefined : query,
+                placeSlug: place ?? resolved?.slug,
+                serviceUuid: service,
+                offset,
+            });
 
             return json({
                 facilities: list.facilities.map((facility) => shapeFacilityCard(facility, locale)),
+                // Reported so the agent can see its free text was read as a place, rather than
+                // wondering why the results look narrower than the query it sent.
+                resolvedPlace: resolved ? { name: resolved.name, kind: resolved.kind, slug: resolved.slug } : undefined,
                 hasMore: list.hasMore,
                 nextOffset: list.hasMore ? (offset ?? 0) + DIRECTORY_PAGE_SIZE : null,
             });

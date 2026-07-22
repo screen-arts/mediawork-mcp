@@ -83,6 +83,37 @@ deploying and whenever you touch the handler, the id scheme or a tool's shape.
 - To exercise anything that depends on an app change not yet released, point `APP_API_URL` at a
   local app dev server.
 
+## The place-query trap
+
+The app's free-text directory search matches facility and company **names** only, never the city —
+correct for www, where the search box sits beside a separate place filter. An agent has no such
+context: asked "who works in London?" it passes `query: "london"`, which matches no *name* and
+returns nothing, against a place holding eleven vendors.
+
+`matchPlaceQuery` ([src/mcp/place-query.ts](src/mcp/place-query.ts)) resolves a query that exactly
+names a place into the place filter instead, in both `search_facilities` and `search`, and reports
+it back as `resolvedPlace`. Matching is exact on name or slug on purpose — a substring rule would
+drag "london post" onto London and silently drop the half of the query that mattered.
+
+**Anything that changes how a query reaches the app should be checked against this**: the failure
+looked like an empty directory, not a bug, and the smoke suite passed straight through it because a
+well-behaved client chains `list_places` first.
+
+## The registry listing
+
+[../server.json](../server.json) is the manifest for the official MCP Registry, published under the
+domain-verified namespace `io.mediawork/*`. It lives at `mcp/server.json` rather than in here
+because it describes the *listing*, not the deployable.
+
+```sh
+cd mcp
+mcp-publisher login dns --domain mediawork.io --private-key "$(…)"
+mcp-publisher publish        # reads ./server.json
+```
+
+Bump `version` in `server.json` on each publish. The Ed25519 `key.pem` that proves ownership of the
+namespace is gitignored and lives in 1Password — it is a credential, not a config file.
+
 ## Deployment
 
 Its own Vercel project, root directory `mcp/deploy`, domain `mcp.mediawork.io`, **production only** —

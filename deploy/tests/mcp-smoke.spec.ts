@@ -93,6 +93,30 @@ test("chains places into a facility search and then a full profile", async () =>
     await client.close();
 });
 
+// Regression: asked "who works in London?", an agent reaches for `query`, not `place`. The app's
+// free text matches facility and company names only, so this returned zero vendors against a place
+// that has eleven of them.
+test("treats a query that names a place as a place filter", async () => {
+    const client = await connect();
+
+    const { places } = await callJson(client, "list_places");
+    const populated = places.find((place: { numFacilities: number }) => place.numFacilities > 0);
+
+    const byQuery = await callJson(client, "search_facilities", { query: populated.name });
+    const byPlace = await callJson(client, "search_facilities", { place: populated.slug });
+
+    expect(byQuery.facilities.length).toBeGreaterThan(0);
+    expect(byQuery.facilities).toEqual(byPlace.facilities);
+    expect(byQuery.resolvedPlace).toMatchObject({ slug: populated.slug });
+
+    // A query that merely contains a place name must still be an ordinary name search.
+    const substring = await callJson(client, "search_facilities", { query: `${populated.name} post` });
+
+    expect(substring.resolvedPlace).toBeUndefined();
+
+    await client.close();
+});
+
 test("lists the service taxonomy the directory filters on", async () => {
     const client = await connect();
 
