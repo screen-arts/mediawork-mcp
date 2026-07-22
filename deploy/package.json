@@ -1,0 +1,38 @@
+{
+    "name": "mediawork-mcp",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev -p 3004",
+        "build": "next build",
+        "start": "next start -p 3004",
+        "start:test": "next start -p 3005",
+        "build-and-start-test": "next build && next start -p 3005",
+        "test": "pnpm exec playwright test",
+        "test:unit": "vitest run",
+        "test:unit:watch": "vitest",
+        "ts": "tsc --noEmit",
+        "lint": "eslint src tests --cache --cache-location node_modules/.cache/eslint/",
+        "fix": "eslint src tests --fix --cache --cache-location node_modules/.cache/eslint/",
+        "check": "pnpm ts & pid1=$!; pnpm lint & pid2=$!; wait $pid1; r1=$?; wait $pid2; r2=$?; exit $((r1 || r2))"
+    },
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "1.26.0",
+        "mcp-handler": "1.1.0",
+        "next": "16.3.0-preview.8",
+        "react": "19.2.7",
+        "react-dom": "19.2.7",
+        "server-only": "^0.0.1",
+        "zod": "^3.25.76"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.61.1",
+        "@types/node": "^20",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "eslint": "^9",
+        "eslint-config-next": "16.3.0-preview.8",
+        "typescript": "^5.9.3",
+        "vitest": "^4.1.10"
+    }
+}
