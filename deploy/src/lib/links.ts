@@ -13,7 +13,7 @@ export const WWW_URL = "https://www.mediawork.io";
 
 export const DEFAULT_LOCALE = "en";
 
-export type PlaceKind = "CITY" | "STATE" | "COUNTRY";
+export type PlaceType = "CITY" | "STATE" | "COUNTRY";
 
 function prefix(locale: string | undefined): string {
     return !locale || locale === DEFAULT_LOCALE ? "" : `/${locale}`;
@@ -27,8 +27,8 @@ export function facilityUrl(companySlug: string, facilitySlug: string, locale?: 
     return url(locale, `/directory/${companySlug}/${facilitySlug}`);
 }
 
-export function placeUrl(kind: PlaceKind, slug: string, locale?: string): string {
-    return url(locale, `/directory/${kind.toLowerCase()}/${slug}`);
+export function placeUrl(type: PlaceType, slug: string, locale?: string): string {
+    return url(locale, `/directory/${type.toLowerCase()}/${slug}`);
 }
 
 export function directoryUrl(locale?: string): string {

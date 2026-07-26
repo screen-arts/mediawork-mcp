@@ -1,4 +1,4 @@
-import type { PlaceKind } from "@/lib/links";
+import type { PlaceType } from "@/lib/links";
 
 /**
  * The opaque id scheme behind the generic `search` / `fetch` pair that ChatGPT's connector mode
@@ -16,19 +16,19 @@ import type { PlaceKind } from "@/lib/links";
 
 export type ResourceId =
     | { kind: "facility"; companySlug: string; facilitySlug: string }
-    | { kind: "place"; placeKind: PlaceKind; slug: string }
+    | { kind: "place"; placeType: PlaceType; slug: string }
     | { kind: "faq"; uuid: string }
     | { kind: "blog"; slug: string }
     | { kind: "plan"; uuid: string };
 
-const PLACE_KINDS: PlaceKind[] = ["CITY", "STATE", "COUNTRY"];
+const PLACE_TYPES: PlaceType[] = ["CITY", "STATE", "COUNTRY"];
 
 export function facilityId(companySlug: string, facilitySlug: string): string {
     return `facility:${companySlug}/${facilitySlug}`;
 }
 
-export function placeId(placeKind: PlaceKind, slug: string): string {
-    return `place:${placeKind}/${slug}`;
+export function placeId(placeType: PlaceType, slug: string): string {
+    return `place:${placeType}/${slug}`;
 }
 
 export function faqId(uuid: string): string {
@@ -74,13 +74,13 @@ export function parseResourceId(id: string): ResourceId | null {
                 return null;
             }
 
-            const placeKind = key.slice(0, slash).toUpperCase() as PlaceKind;
+            const placeType = key.slice(0, slash).toUpperCase() as PlaceType;
 
-            if (!PLACE_KINDS.includes(placeKind)) {
+            if (!PLACE_TYPES.includes(placeType)) {
                 return null;
             }
 
-            return { kind: "place", placeKind, slug: key.slice(slash + 1) };
+            return { kind: "place", placeType, slug: key.slice(slash + 1) };
         }
         case "faq":
             return { kind: "faq", uuid: key };

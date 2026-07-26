@@ -38,7 +38,7 @@ export function matchPlaceQuery(places: Place[], query: string | undefined): Pla
 
     // "New York" is both a city and a state. Prefer the narrower reading: someone naming a city
     // means that city, and the state page is a click away either way.
-    const byKind = { CITY: 0, STATE: 1, COUNTRY: 2 };
+    const byType = { CITY: 0, STATE: 1, COUNTRY: 2 };
 
-    return matches.sort((a, b) => byKind[a.kind] - byKind[b.kind] || b.numFacilities - a.numFacilities)[0];
+    return matches.sort((a, b) => byType[a.type] - byType[b.type] || b.numFacilities - a.numFacilities)[0];
 }

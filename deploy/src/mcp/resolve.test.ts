@@ -10,7 +10,7 @@ describe("resource ids", () => {
         });
         expect(parseResourceId(placeId("CITY", "bangkok"))).toEqual({
             kind: "place",
-            placeKind: "CITY",
+            placeType: "CITY",
             slug: "bangkok",
         });
         expect(parseResourceId(faqId("58ec6634-0796-4f76-b215-19f3a19c7730"))).toEqual({
@@ -46,7 +46,7 @@ describe("resource ids", () => {
         }
     });
 
-    it("accepts a lowercase place kind", () => {
-        expect(parseResourceId("place:city/bangkok")).toEqual({ kind: "place", placeKind: "CITY", slug: "bangkok" });
+    it("accepts a lowercase place type", () => {
+        expect(parseResourceId("place:city/bangkok")).toEqual({ kind: "place", placeType: "CITY", slug: "bangkok" });
     });
 });

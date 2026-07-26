@@ -92,9 +92,9 @@ async function searchEverything(query: string): Promise<SearchResult[]> {
     const placeResults = places
         .filter((place) => contains(place.name, needle))
         .map((place) => ({
-            id: placeId(place.kind, place.slug),
+            id: placeId(place.type, place.slug),
             title: `${place.name} — ${place.numFacilities} vendors`,
-            url: placeUrl(place.kind, place.slug),
+            url: placeUrl(place.type, place.slug),
         }));
 
     const planResults = products
@@ -151,7 +151,7 @@ async function fetchById(id: string) {
         }
         case "place": {
             const place = (await getPlaces()).find(
-                (candidate) => candidate.kind === parsed.placeKind && candidate.slug === parsed.slug,
+                (candidate) => candidate.type === parsed.placeType && candidate.slug === parsed.slug,
             );
 
             if (!place) {
@@ -163,7 +163,7 @@ async function fetchById(id: string) {
             return {
                 id,
                 title: place.name,
-                url: placeUrl(place.kind, place.slug),
+                url: placeUrl(place.type, place.slug),
                 text: JSON.stringify(
                     {
                         place: place.name,

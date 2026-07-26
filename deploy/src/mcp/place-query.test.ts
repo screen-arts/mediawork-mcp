@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { Place } from "@/lib/directory-api";
 import { matchPlaceQuery } from "@/mcp/place-query";
 
-const place = (kind: Place["kind"], slug: string, name: string, numFacilities = 5): Place => ({
-    kind,
+const place = (type: Place["type"], slug: string, name: string, numFacilities = 5): Place => ({
+    type,
     slug,
     name,
     numFacilities,
-    parentKind: null,
+    parentType: null,
     parentSlug: null,
 });
 
@@ -39,7 +39,7 @@ describe("matchPlaceQuery", () => {
 
     // Someone naming a city means that city; the state page is a click away either way.
     it("prefers the narrower place when a name is both a city and a state", () => {
-        expect(matchPlaceQuery(places, "New York")?.kind).toBe("CITY");
+        expect(matchPlaceQuery(places, "New York")?.type).toBe("CITY");
     });
 
     // A substring rule would drag "london post" onto London and silently drop "post" — worse than

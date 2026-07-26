@@ -70,7 +70,7 @@ export function registerDirectoryTools(server: McpServer) {
                 facilities: list.facilities.map((facility) => shapeFacilityCard(facility, locale)),
                 // Reported so the agent can see its free text was read as a place, rather than
                 // wondering why the results look narrower than the query it sent.
-                resolvedPlace: resolved ? { name: resolved.name, kind: resolved.kind, slug: resolved.slug } : undefined,
+                resolvedPlace: resolved ? { name: resolved.name, type: resolved.type, slug: resolved.slug } : undefined,
                 hasMore: list.hasMore,
                 nextOffset: list.hasMore ? (offset ?? 0) + DIRECTORY_PAGE_SIZE : null,
             });

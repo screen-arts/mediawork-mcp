@@ -86,11 +86,11 @@ function compactCounts(online: number | null, offline: number | null) {
 export function shapePlace(place: Place, locale?: string) {
     return compact({
         name: place.name,
-        kind: place.kind,
+        type: place.type,
         slug: place.slug,
         numFacilities: place.numFacilities,
         parent: place.parentSlug,
-        url: placeUrl(place.kind, place.slug, locale),
+        url: placeUrl(place.type, place.slug, locale),
     });
 }
 

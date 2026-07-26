@@ -12,7 +12,7 @@ import { APP_API_URL, bust, DIRECTORY_CACHE_TAG, getJson } from "@/lib/fetch";
  * the app and so can cache for days; we get none, so the TTL is the whole mechanism.
  */
 
-export type PlaceKind = "CITY" | "STATE" | "COUNTRY";
+export type PlaceType = "CITY" | "STATE" | "COUNTRY";
 
 export type DirectoryImage = { url: string; width: number; height: number } | null;
 
@@ -62,11 +62,11 @@ export type FacilityProfile = FacilityCard & {
 };
 
 export type Place = {
-    kind: PlaceKind;
+    type: PlaceType;
     slug: string;
     name: string;
     numFacilities: number;
-    parentKind: PlaceKind | null;
+    parentType: PlaceType | null;
     parentSlug: string | null;
 };
 
