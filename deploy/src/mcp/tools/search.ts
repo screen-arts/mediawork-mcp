@@ -58,20 +58,13 @@ async function searchEverything(query: string): Promise<SearchResult[]> {
 
     // Fanned out rather than sequential: each source is an independent cached fetch, so the slowest
     // one sets the latency instead of the sum.
-    const [faq, posts, places, products] = await Promise.all([
-        getFaq(),
-        getBlogPosts(),
-        getPlaces(),
-        getProducts(),
-    ]);
+    const [faq, posts, places, products] = await Promise.all([getFaq(), getBlogPosts(), getPlaces(), getProducts()]);
 
     // Same place-naming trap as search_facilities: "london" matches no facility *name*, so without
     // this a search for a city returns the place row and none of the vendors in it.
     const resolvedPlace = matchPlaceQuery(places, query);
 
-    const facilities = await searchFacilities(
-        resolvedPlace ? { placeSlug: resolvedPlace.slug } : { query },
-    );
+    const facilities = await searchFacilities(resolvedPlace ? { placeSlug: resolvedPlace.slug } : { query });
 
     const facilityResults = facilities.facilities.map((facility) => ({
         id: facilityId(facility.companySlug, facility.facilitySlug),

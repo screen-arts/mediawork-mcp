@@ -11,10 +11,11 @@
         "test": "pnpm exec playwright test",
         "test:unit": "vitest run",
         "test:unit:watch": "vitest",
-        "ts": "tsc --noEmit",
-        "lint": "eslint src tests --cache --cache-location node_modules/.cache/eslint/",
-        "fix": "eslint src tests --fix --cache --cache-location node_modules/.cache/eslint/",
-        "check": "pnpm ts & pid1=$!; pnpm lint & pid2=$!; wait $pid1; r1=$?; wait $pid2; r2=$?; exit $((r1 || r2))"
+        "ts": "./node_modules/typescript-native/bin/tsc --noEmit --tsBuildInfoFile tsconfig.native.tsbuildinfo",
+        "lint": "biome check",
+        "fix": "biome check --write",
+        "check": "pnpm ts & pid1=$!; pnpm lint & pid2=$!; wait $pid1; r1=$?; wait $pid2; r2=$?; exit $((r1 || r2))",
+        "ci:lint": "biome ci"
     },
     "dependencies": {
         "@modelcontextprotocol/sdk": "1.26.0",
@@ -26,13 +27,13 @@
         "zod": "^3.25.76"
     },
     "devDependencies": {
+        "@biomejs/biome": "^2.5.7",
         "@playwright/test": "^1.61.1",
         "@types/node": "^20",
         "@types/react": "^19",
         "@types/react-dom": "^19",
-        "eslint": "^9",
-        "eslint-config-next": "16.3.0-preview.8",
         "typescript": "^5.9.3",
+        "typescript-native": "npm:typescript@7.0.2",
         "vitest": "^4.1.10"
     }
 }

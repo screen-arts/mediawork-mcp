@@ -200,9 +200,7 @@ describe("shapeProducts", () => {
     });
 
     it("filters to one currency, case-insensitively", () => {
-        expect(shapeProducts(products, "gbp")[0].prices).toEqual([
-            { price: 79, currency: "GBP", interval: "MONTH" },
-        ]);
+        expect(shapeProducts(products, "gbp")[0].prices).toEqual([{ price: 79, currency: "GBP", interval: "MONTH" }]);
     });
 
     it("returns no prices for a currency that is not published", () => {

@@ -19,7 +19,9 @@ function normalise(value: string): string {
 
 /** "New York" and "new-york" are the same place to anyone but a string comparison. */
 function slugify(value: string): string {
-    return normalise(value).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    return normalise(value)
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
 }
 
 export function matchPlaceQuery(places: Place[], query: string | undefined): Place | null {
