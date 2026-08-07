@@ -3,8 +3,13 @@
     "name": "io.mediawork/mediawork",
     "title": "Mediawork",
     "description": "Search Mediawork's directory of post-production and distribution vendors, plus FAQ and plans.",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "websiteUrl": "https://www.mediawork.io",
+    "repository": {
+        "source": "github",
+        "url": "https://github.com/screen-arts/mediawork-mcp",
+        "id": "1326381144"
+    },
     "remotes": [
         {
             "type": "streamable-http",
