@@ -1,5 +1,5 @@
 import "server-only";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { DIRECTORY_PAGE_SIZE, getFacility, getPlaces, getServices, searchFacilities } from "@/lib/directory-api";
 import { matchPlaceQuery } from "@/mcp/place-query";
@@ -15,7 +15,7 @@ export function registerDirectoryTools(server: McpServer) {
                 "The service categories vendors on Mediawork offer, such as Editorial, Sound Post or Visual Effects. " +
                 "Each has a uuid — pass it as `service` to search_facilities to filter the directory to vendors " +
                 "offering that service. Call this first when a question is about a kind of work.",
-            inputSchema: { locale: LOCALE_ARG },
+            inputSchema: z.object({ locale: LOCALE_ARG }),
         },
         async ({ locale }) => json({ services: (await getServices(locale)).map(shapeService) }),
     );
@@ -27,7 +27,7 @@ export function registerDirectoryTools(server: McpServer) {
             description:
                 "Cities, states and countries that have at least one vendor listed, with a count of how many. " +
                 "Use a place `slug` as the `place` argument to search_facilities.",
-            inputSchema: { locale: LOCALE_ARG },
+            inputSchema: z.object({ locale: LOCALE_ARG }),
         },
         async ({ locale }) => json({ places: (await getPlaces()).map((place) => shapePlace(place, locale)) }),
     );
@@ -42,7 +42,7 @@ export function registerDirectoryTools(server: McpServer) {
                 "To find vendors somewhere, prefer `place`; a `query` naming a place is treated as one anyway, and " +
                 "the response reports it as `resolvedPlace`. Results are paginated; when `hasMore` is true, call " +
                 "again with the returned `nextOffset`.",
-            inputSchema: {
+            inputSchema: z.object({
                 query: z
                     .string()
                     .optional()
@@ -51,7 +51,7 @@ export function registerDirectoryTools(server: McpServer) {
                 service: z.string().optional().describe("A service uuid from list_services"),
                 offset: z.number().int().min(0).optional().describe("Result offset for pagination"),
                 locale: LOCALE_ARG,
-            },
+            }),
         },
         async ({ query, place, service, offset, locale }) => {
             // A query that names a place becomes the place filter, and stops being a name search —
@@ -85,11 +85,11 @@ export function registerDirectoryTools(server: McpServer) {
                 "The full public profile for one vendor: services offered, creatives on the team and what each of " +
                 "them does, production types, rooms and spaces, and addresses. Takes the `companySlug` and " +
                 "`facilitySlug` pair returned by search_facilities.",
-            inputSchema: {
+            inputSchema: z.object({
                 companySlug: z.string().describe("From a search_facilities result"),
                 facilitySlug: z.string().describe("From a search_facilities result"),
                 locale: LOCALE_ARG,
-            },
+            }),
         },
         async ({ companySlug, facilitySlug, locale }) => {
             const profile = await getFacility(companySlug, facilitySlug);

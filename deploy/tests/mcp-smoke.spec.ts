@@ -1,5 +1,4 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -204,8 +203,9 @@ test("reports a malformed id as a tool error, not a crash", async () => {
     await client.close();
 });
 
-test("404s any transport segment other than /mcp", async ({ request }) => {
-    // The dynamic segment sits at the app root, so without the guard every path would answer here.
+test("404s every path other than /mcp", async ({ request }) => {
+    // /sse is the one that matters: the 2024-11-05 HTTP+SSE transport is gone in SDK v2, and an old
+    // client must fail cleanly rather than find something half-alive there.
     expect((await request.post("/sse")).status()).toBe(404);
     expect((await request.post("/anything-else")).status()).toBe(404);
 });

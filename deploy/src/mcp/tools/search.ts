@@ -1,5 +1,5 @@
 import "server-only";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { getBlogPost, getBlogPosts, getFaq, getProducts } from "@/lib/content-api";
 import { getFacility, getPlaces, searchFacilities } from "@/lib/directory-api";
@@ -29,7 +29,7 @@ export function registerSearchTools(server: McpServer) {
                 "and return matching records as {id, title, url}. Pass an `id` to `fetch` to read one in full. " +
                 "If your client supports them, the dedicated tools (search_facilities, search_faq, …) give " +
                 "richer, filterable results.",
-            inputSchema: { query: z.string().describe("What to search for") },
+            inputSchema: z.object({ query: z.string().describe("What to search for") }),
         },
         async ({ query }) => json({ results: await searchEverything(query) }),
     );
@@ -39,7 +39,7 @@ export function registerSearchTools(server: McpServer) {
         {
             title: "Fetch a Mediawork record",
             description: "Retrieve the full contents of one record by the `id` returned from `search`.",
-            inputSchema: { id: z.string().describe("An id from a search result") },
+            inputSchema: z.object({ id: z.string().describe("An id from a search result") }),
         },
         async ({ id }) => {
             const document = await fetchById(id);

@@ -1,5 +1,5 @@
 import "server-only";
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { getBlogPost, getBlogPosts, getFaq, getProducts } from "@/lib/content-api";
 import { shapeBlogCard, shapeBlogPost, shapeFaq, shapeProducts } from "@/mcp/shape";
@@ -13,10 +13,10 @@ export function registerContentTools(server: McpServer) {
             description:
                 "Mediawork's published FAQ, grouped by category. With a query, returns matching questions and " +
                 "their answers; without one, returns every question so you can pick which to search for.",
-            inputSchema: {
+            inputSchema: z.object({
                 query: z.string().optional().describe("Matched against both questions and answers"),
                 locale: LOCALE_ARG,
-            },
+            }),
         },
         async ({ query, locale }) => json({ faq: shapeFaq(await getFaq(locale), query, locale) }),
     );
@@ -28,7 +28,7 @@ export function registerContentTools(server: McpServer) {
             description:
                 "Published posts from the Mediawork blog, newest first. Use get_blog_post with a returned `slug` " +
                 "to read one in full.",
-            inputSchema: { locale: LOCALE_ARG },
+            inputSchema: z.object({ locale: LOCALE_ARG }),
         },
         async ({ locale }) => json({ posts: (await getBlogPosts()).map((post) => shapeBlogCard(post, locale)) }),
     );
@@ -38,10 +38,10 @@ export function registerContentTools(server: McpServer) {
         {
             title: "Read a blog post",
             description: "The full body of one published blog post, as markdown.",
-            inputSchema: {
+            inputSchema: z.object({
                 slug: z.string().describe("From a list_blog_posts result"),
                 locale: LOCALE_ARG,
-            },
+            }),
         },
         async ({ slug, locale }) => {
             const post = await getBlogPost(slug);
@@ -61,10 +61,10 @@ export function registerContentTools(server: McpServer) {
             description:
                 "Mediawork's subscription plans: what each includes, and its prices. Prices are published in " +
                 "several currencies — pass `currency` to return just one.",
-            inputSchema: {
+            inputSchema: z.object({
                 currency: z.string().optional().describe("ISO currency code, e.g. USD, GBP, EUR"),
                 locale: LOCALE_ARG,
-            },
+            }),
         },
         async ({ currency, locale }) => json({ plans: shapeProducts(await getProducts(locale), currency, locale) }),
     );

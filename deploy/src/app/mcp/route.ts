@@ -18,25 +18,10 @@ const handler = createMcpHandler(
             "filter, then search_facilities, then get_facility for the full profile. Every result carries a " +
             "www.mediawork.io URL — cite it.",
     },
-    {
-        // With app/[transport]/route.ts at the root, this derives the endpoint as /mcp.
-        basePath: "/",
-        // SSE was superseded by Streamable HTTP in the 2025-03-26 spec, and keeping it would drag in
-        // a Redis dependency for resumability that this server has no other use for.
-        disableSse: true,
-        maxDuration: 60,
-    },
 );
 
-// A root-level dynamic segment is greedy — without this, /anything would answer as an MCP endpoint.
-async function guarded(request: Request, context: { params: Promise<{ transport: string }> }) {
-    const { transport } = await context.params;
+// mcp-handler's own `maxDuration` option went away in 2.x; Next's route segment config is where the
+// function timeout belongs now.
+export const maxDuration = 60;
 
-    if (transport !== "mcp") {
-        return new Response("Not found", { status: 404 });
-    }
-
-    return handler(request);
-}
-
-export { guarded as GET, guarded as POST, guarded as DELETE };
+export { handler as GET, handler as POST };

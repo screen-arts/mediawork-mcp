@@ -35,7 +35,7 @@ deploy/src/lib/links.ts              canonical www.mediawork.io URL builders
 deploy/src/mcp/shape.ts              pure payload -> tool result shapers
 deploy/src/mcp/resolve.ts            the `kind:key` id scheme for search/fetch
 deploy/src/mcp/tools/*.ts            tool registration, one file per group
-deploy/src/app/[transport]/route.ts  the handler; guards the segment so only /mcp answers
+deploy/src/app/mcp/route.ts          the handler, mounted at the endpoint path
 ```
 
 **Response types are mirrored, not imported.** This is a separate deployable talking to a published
@@ -80,9 +80,40 @@ Ports are chosen so this server never contends with the app (3002/3003) or www (
 **Pre-commit gate: lint → check → `pnpm test:unit`.** Playwright is not in the gate; run it before
 deploying and whenever you touch the handler, the id scheme or a tool's shape.
 
+## Protocol eras — one handler serves both
+
+On MCP SDK v2, `createMcpHandler` serves the **2026-07-28** spec natively and falls back to 2025-era
+Streamable HTTP for older clients. There is no session and no `initialize` in the new era, which is
+why the handler is mounted at a plain `app/mcp/route.ts`: 1.x needed `basePath` and a greedy
+`[transport]` segment guarded in our own code, and 2.x removed every route option in favour of
+"mount it where you want it". The old `/sse` HTTP+SSE transport is gone entirely — unmounted, so
+Next 404s it.
+
+**A 2026-07-28 request is not an `initialize` call, and probing it as one is misleading.** Send
+`initialize` with `protocolVersion: "2026-07-28"` and the server answers `2025-11-25` — the highest
+version its legacy table holds — which reads exactly like the upgrade didn't take. It did: an
+`initialize` request *is* a 2025-era request, so it gets a 2025-era answer. A real 2026-07-28 client
+calls the method directly, and the server enforces three things a hand-rolled probe will miss, each
+with a precise error naming what's absent:
+
+```sh
+curl -X POST http://localhost:3004/mcp \
+  -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+  -H 'MCP-Protocol-Version: 2026-07-28' \
+  -H 'Mcp-Method: tools/call' -H 'Mcp-Name: list_places' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_places","arguments":{},
+       "_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28",
+                "io.modelcontextprotocol/clientInfo":{"name":"probe","version":"1"},
+                "io.modelcontextprotocol/clientCapabilities":{}}}}'
+```
+
+The `_meta` envelope carries per-request what `initialize` used to carry per-session, and the
+`Mcp-Method` / `Mcp-Name` headers must agree with the body — the spec wants a proxy to route on
+headers alone.
+
 ## Testing notes
 
-- `deploy/tests/mcp-smoke.spec.ts` drives the server with the real `@modelcontextprotocol/sdk` client over
+- `deploy/tests/mcp-smoke.spec.ts` drives the server with the real `@modelcontextprotocol/client` over
   Streamable HTTP, because "can a real MCP client talk to us" is the risk worth covering.
 - It runs against the **production** app API by default — the data is public and read-only, and
   there is no preview deployment of the app to point at. Assertions are therefore about shape and
