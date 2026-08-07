@@ -3,3 +3,5 @@
 # never in the repo. `.mcpregistry_*` are the publisher CLI's session tokens.
 key.pem
 .mcpregistry_*
+
+.DS_Store

@@ -5,8 +5,9 @@ publicly — the vendor directory, the FAQ, the blog, and subscription plans.
 
 Connector URL: `https://mcp.mediawork.io/mcp` (Streamable HTTP, no authentication).
 
-> Companion docs: [../../AGENTS.md](../../AGENTS.md) for repo-wide conventions, and
-> `www/deploy` (separate repo) for the sibling consumer of the same app API.
+> Sibling repos: `screen-arts/mediawork-app` is the product app that owns the `/api/www` contract
+> this server wraps, and `screen-arts/mediawork-www` is the marketing site — the other consumer of
+> that same contract. Neither is a dependency: this repo talks to the app over public HTTP only.
 
 ## The two rules that define this project
 
@@ -22,19 +23,23 @@ reach around into a database or a private route.
 
 ## Layout
 
+The Next.js deployable lives in `deploy/`; `server.json` sits at the root because it describes the
+*listing*, not the deployable.
+
 ```
-src/lib/fetch.ts          APP_API_URL, cache tags, the one fetch wrapper
-src/lib/directory-api.ts  directory endpoints + mirrored response types
-src/lib/content-api.ts    FAQ, blog and products endpoints + types
-src/lib/links.ts          canonical www.mediawork.io URL builders
-src/mcp/shape.ts          pure payload -> tool result shapers
-src/mcp/resolve.ts        the `kind:key` id scheme for search/fetch
-src/mcp/tools/*.ts        tool registration, one file per group
-src/app/[transport]/route.ts  the handler; guards the segment so only /mcp answers
+server.json                          the MCP Registry manifest (see below)
+deploy/src/lib/fetch.ts              APP_API_URL, cache tags, the one fetch wrapper
+deploy/src/lib/directory-api.ts      directory endpoints + mirrored response types
+deploy/src/lib/content-api.ts        FAQ, blog and products endpoints + types
+deploy/src/lib/links.ts              canonical www.mediawork.io URL builders
+deploy/src/mcp/shape.ts              pure payload -> tool result shapers
+deploy/src/mcp/resolve.ts            the `kind:key` id scheme for search/fetch
+deploy/src/mcp/tools/*.ts            tool registration, one file per group
+deploy/src/app/[transport]/route.ts  the handler; guards the segment so only /mcp answers
 ```
 
 **Response types are mirrored, not imported.** This is a separate deployable talking to a published
-HTTP contract, exactly as `www/deploy` does. Keep the local types in step with the app's
+HTTP contract, exactly as the marketing site does. Keep the local types in step with the app's
 `Www*` types by hand when the contract changes.
 
 **Keep shaping pure.** Anything that turns an API payload into a tool result belongs in
@@ -59,7 +64,9 @@ with actual rules in them without a network.
 ## Running it
 
 ```sh
+cd deploy
 nvm use 24
+pnpm install
 pnpm dev                                        # port 3004 — never 3000
 APP_API_URL=http://localhost:3002 pnpm dev      # against a local app dev server
 pnpm test:unit                                  # Vitest, pure logic, no network
@@ -67,15 +74,15 @@ pnpm test                                       # Playwright smoke spec, builds 
 pnpm check                                      # types + lint
 ```
 
-Ports mirror the repo's split: 3004 for dev, 3005 for the Playwright server, so a dev server and a
-test run never contend.
+Ports are chosen so this server never contends with the app (3002/3003) or www (3000): 3004 for dev,
+3005 for the Playwright server.
 
 **Pre-commit gate: lint → check → `pnpm test:unit`.** Playwright is not in the gate; run it before
 deploying and whenever you touch the handler, the id scheme or a tool's shape.
 
 ## Testing notes
 
-- `tests/mcp-smoke.spec.ts` drives the server with the real `@modelcontextprotocol/sdk` client over
+- `deploy/tests/mcp-smoke.spec.ts` drives the server with the real `@modelcontextprotocol/sdk` client over
   Streamable HTTP, because "can a real MCP client talk to us" is the risk worth covering.
 - It runs against the **production** app API by default — the data is public and read-only, and
   there is no preview deployment of the app to point at. Assertions are therefore about shape and
@@ -90,7 +97,7 @@ correct for www, where the search box sits beside a separate place filter. An ag
 context: asked "who works in London?" it passes `query: "london"`, which matches no *name* and
 returns nothing, against a place holding eleven vendors.
 
-`matchPlaceQuery` ([src/mcp/place-query.ts](src/mcp/place-query.ts)) resolves a query that exactly
+`matchPlaceQuery` ([deploy/src/mcp/place-query.ts](deploy/src/mcp/place-query.ts)) resolves a query that exactly
 names a place into the place filter instead, in both `search_facilities` and `search`, and reports
 it back as `resolvedPlace`. Matching is exact on name or slug on purpose — a substring rule would
 drag "london post" onto London and silently drop the half of the query that mattered.
@@ -101,12 +108,11 @@ well-behaved client chains `list_places` first.
 
 ## The registry listing
 
-[../server.json](../server.json) is the manifest for the official MCP Registry, published under the
-domain-verified namespace `io.mediawork/*`. It lives at `mcp/server.json` rather than in here
+[server.json](server.json) is the manifest for the official MCP Registry, published under the
+domain-verified namespace `io.mediawork/*`. It lives at the repo root rather than inside `deploy/`
 because it describes the *listing*, not the deployable.
 
 ```sh
-cd mcp
 mcp-publisher login dns --domain mediawork.io --private-key "$(…)"
 mcp-publisher publish        # reads ./server.json
 ```
@@ -116,7 +122,15 @@ namespace is gitignored and lives in 1Password — it is a credential, not a con
 
 ## Deployment
 
-Its own Vercel project, root directory `mcp/deploy`, domain `mcp.mediawork.io`, **production only** —
+Its own Vercel project, root directory `deploy`, domain `mcp.mediawork.io`, **production only** —
 there are no preview deployments, which is also why no Vercel Deployment Protection bypass secret is
 needed. The only environment variable is `APP_API_URL`. Rate limiting is a Vercel Firewall rule on
 the project; BotID is deliberately *not* applied here, because MCP clients are bots.
+
+## This repo is public
+
+It was split out of the private `screen-arts/mediawork-app` monorepo so the server anyone can connect
+to is also a server anyone can read — which is the point of rule 1 above. Nothing here may reference
+a credential, an internal hostname, a database, or an unreleased product detail. The registry
+keypair (`key.pem`) and the publisher's session tokens are gitignored at the root and live in
+1Password.

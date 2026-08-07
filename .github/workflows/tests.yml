@@ -1,0 +1,107 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Types, lint, unit tests
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./deploy
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
+
+    - uses: pnpm/action-setup@v6
+      with:
+        version: 10
+
+    - name: Install dependencies
+      run: pnpm install
+
+    # TypeScript 7 via the `typescript-native` alias (see package.json).
+    - name: Check types
+      run: pnpm ts
+
+    # Biome only — no ESLint at all. This project has no i18n rule and barely any React, so
+    # neither of the two things the main app keeps ESLint for applies here.
+    - name: Lint and check formatting
+      run: pnpm ci:lint
+
+    - name: Run unit tests
+      run: pnpm test:unit
+
+  manifest:
+    name: Registry manifest valid (server.json)
+    timeout-minutes: 5
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
+
+    # The registry rejects an invalid manifest at publish time with little to go on —
+    # `description` has a 100-character cap that the first draft of ours quietly broke.
+    # Validated against the live published schema so a schema change surfaces here rather
+    # than the next time someone runs `mcp-publisher publish`.
+    # --strict=false: the schema uses `example` and format:uri, which ajv's strict mode rejects.
+    - name: Validate server.json against the published schema
+      run: |
+        SCHEMA_URL=$(node -p "require('./server.json')['\$schema']")
+        echo "Validating against $SCHEMA_URL"
+        curl --silent --fail --max-time 30 "$SCHEMA_URL" -o /tmp/server.schema.json
+        npx --yes ajv-cli@5 validate -s /tmp/server.schema.json -d server.json --spec=draft7 --strict=false
+
+  smoke:
+    name: Smoke (Playwright)
+    needs: check
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./deploy
+    steps:
+    - uses: actions/checkout@v6
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: 24
+
+    - uses: pnpm/action-setup@v6
+      with:
+        version: 10
+
+    - name: Install dependencies
+      run: pnpm install
+
+    # No `playwright install` on purpose: the spec drives the MCP endpoint over HTTP with the
+    # @modelcontextprotocol/sdk client and Playwright's `request` fixture, and never opens a
+    # page — so no browser binary is launched and none needs downloading. Verified by running
+    # the suite with PLAYWRIGHT_BROWSERS_PATH pointed at an empty directory.
+    #
+    # The webServer builds and serves on 3005, and the server under test fetches the *production*
+    # app API (public, read-only — there is no preview deployment of the app to point at). A red
+    # here can therefore mean app.mediawork.io is down rather than that this change broke
+    # anything: check https://app.mediawork.io/api/www/directory/places before digging.
+    - name: Run smoke tests
+      run: pnpm test
+
+    - uses: actions/upload-artifact@v7
+      if: ${{ failure() }}
+      with:
+        name: playwright-report
+        path: deploy/playwright-report/
+        retention-days: 30
+        if-no-files-found: ignore
