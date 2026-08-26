@@ -57,17 +57,10 @@ from `https://app.mediawork.io/api/www/*` — the same public contract the marke
 There are no database credentials and no write path, so "read-only" is a property of the
 deployment's shape rather than a promise in a comment.
 
-## Develop
+## Contributing
 
-The Next.js app is in [`deploy/`](deploy/). Conventions and the traps worth knowing are in
-[AGENTS.md](AGENTS.md).
+Setup, the test commands and the house conventions are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-```sh
-cd deploy
-nvm use 24
-pnpm install
-pnpm dev            # http://localhost:3004/mcp
-pnpm check          # types + lint
-pnpm test:unit      # Vitest — pure logic, no network
-pnpm test           # Playwright smoke spec against a real MCP client
-```
+## Licence
+
+[MIT](LICENSE) © Screen Arts Limited.
