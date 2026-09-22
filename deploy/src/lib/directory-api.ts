@@ -33,6 +33,7 @@ export type FacilityCard = {
 };
 
 export type FacilityProfile = FacilityCard & {
+    isIndexable: boolean;
     banner: DirectoryImage;
     latitude: number | null;
     longitude: number | null;
