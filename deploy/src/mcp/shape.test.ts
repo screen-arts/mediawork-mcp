@@ -47,6 +47,17 @@ const profile: FacilityProfile = {
             image: { url: "https://uploads.mediawork.io/suite.webp", width: 1200, height: 800 },
         },
     ],
+    equipment: [
+        {
+            uuid: "equipment-uuid",
+            name: "Camera package",
+            makeName: "Sony",
+            modelName: "FX6",
+            modelType: "CAMERA",
+            quantity: 3,
+            image: null,
+        },
+    ],
     people: [
         {
             uuid: "person-uuid",
@@ -100,6 +111,9 @@ describe("shapeFacilityProfile", () => {
         expect(shaped.productionTypes).toEqual(["Feature", "Series"]);
         expect(shaped.editSuites).toEqual({ online: 4 });
         expect(shaped.spaces).toEqual([{ name: "Suite 1", description: "Grading theatre", seatingCapacity: 6 }]);
+        expect(shaped.equipment).toEqual([
+            { name: "Camera package", make: "Sony", model: "FX6", type: "CAMERA", quantity: 3 },
+        ]);
         // An empty collection is dropped entirely rather than shipped as [].
         expect(shaped).not.toHaveProperty("addresses");
     });

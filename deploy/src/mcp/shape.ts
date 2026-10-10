@@ -69,6 +69,15 @@ export function shapeFacilityProfile(profile: FacilityProfile, locale?: string) 
                 seatingCapacity: space.seatingCapacity || null,
             }),
         ),
+        equipment: profile.equipment.map((item) =>
+            compact({
+                name: item.name,
+                make: item.makeName,
+                model: item.modelName,
+                type: item.modelType,
+                quantity: item.quantity,
+            }),
+        ),
         // The creatives. `services` is what each person actually does, which is the question people
         // ask of a facility profile far more often than its address.
         creatives: profile.people.map((person) =>

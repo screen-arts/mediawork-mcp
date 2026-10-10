@@ -52,6 +52,15 @@ export type FacilityProfile = FacilityCard & {
         countryName: string;
     }[];
     spaces: { uuid: string; name: string; description: string; seatingCapacity: number; image: DirectoryImage }[];
+    equipment: {
+        uuid: string;
+        name: string;
+        makeName: string | null;
+        modelName: string;
+        modelType: string | null;
+        quantity: number | null;
+        image: DirectoryImage;
+    }[];
     people: {
         uuid: string;
         name: string;
@@ -103,12 +112,13 @@ export async function getFacility(companySlug: string, facilitySlug: string): Pr
     cacheLife("hours");
     cacheTag(DIRECTORY_CACHE_TAG);
 
-    const body = await getJson<{ profile: FacilityProfile }>(
+    // An app deployment from before equipment was published by model sends no `equipment` field.
+    const body = await getJson<{ profile: Omit<FacilityProfile, "equipment"> & Partial<FacilityProfile> }>(
         `${APP_API_URL}/api/www/directory/facility/${encodeURIComponent(companySlug)}/${encodeURIComponent(facilitySlug)}?${bust()}`,
         { allowNotFound: true },
     );
 
-    return body?.profile ?? null;
+    return body?.profile ? { ...body.profile, equipment: body.profile.equipment ?? [] } : null;
 }
 
 export async function getPlaces(): Promise<Place[]> {

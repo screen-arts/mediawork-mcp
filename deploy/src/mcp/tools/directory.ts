@@ -83,7 +83,7 @@ export function registerDirectoryTools(server: McpServer) {
             title: "Get a vendor profile",
             description:
                 "The full public profile for one vendor: services offered, creatives on the team and what each of " +
-                "them does, production types, rooms and spaces, and addresses. Takes the `companySlug` and " +
+                "them does, production types, rooms and spaces, equipment by make and model, and addresses. Takes the `companySlug` and " +
                 "`facilitySlug` pair returned by search_facilities.",
             inputSchema: z.object({
                 companySlug: z.string().describe("From a search_facilities result"),
