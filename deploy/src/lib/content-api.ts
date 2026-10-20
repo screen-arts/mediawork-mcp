@@ -68,7 +68,8 @@ export type PlanComparisonSection = {
 
 export type Plans = { products: Product[]; comparison: PlanComparisonSection[] };
 
-// `locale` is a cache-key argument: each locale gets its own cached response, all under one tag.
+// `locale` is a cache-key argument: each locale gets its own cached response, all under one tag. `surface=mcp` asks
+// for the questions an admin has switched on for the MCP server; an app that predates surfaces ignores it.
 export async function getFaq(locale?: string): Promise<FaqCategory[]> {
     "use cache";
     cacheLife("hours");
@@ -76,8 +77,9 @@ export async function getFaq(locale?: string): Promise<FaqCategory[]> {
 
     const localeParam = locale ? `locale=${encodeURIComponent(locale)}&` : "";
 
-    return (await getJson<{ categories: FaqCategory[] }>(`${APP_API_URL}/api/www/faq?${localeParam}${bust()}`))
-        .categories;
+    return (
+        await getJson<{ categories: FaqCategory[] }>(`${APP_API_URL}/api/www/faq?${localeParam}surface=mcp&${bust()}`)
+    ).categories;
 }
 
 export async function getBlogPosts(): Promise<BlogPostCard[]> {
