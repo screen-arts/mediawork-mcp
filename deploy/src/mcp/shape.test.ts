@@ -28,7 +28,6 @@ const card: FacilityCard = {
 
 const profile: FacilityProfile = {
     ...card,
-    isIndexable: false,
     banner: null,
     latitude: 13.7,
     longitude: 100.5,
