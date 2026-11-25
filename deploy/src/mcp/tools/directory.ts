@@ -1,7 +1,14 @@
 import "server-only";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
-import { DIRECTORY_PAGE_SIZE, getFacility, getPlaces, getServices, searchFacilities } from "@/lib/directory-api";
+import {
+    DIRECTORY_COMPANY_TYPES,
+    DIRECTORY_PAGE_SIZE,
+    getFacility,
+    getPlaces,
+    getServices,
+    searchFacilities,
+} from "@/lib/directory-api";
 import { FACILITY_CARD, FACILITY_PROFILE, PLACE, SERVICE } from "@/mcp/output";
 import { matchPlaceQuery } from "@/mcp/place-query";
 import { shapeFacilityCard, shapeFacilityProfile, shapePlace, shapeService } from "@/mcp/shape";
@@ -41,7 +48,8 @@ export function registerDirectoryTools(server: McpServer) {
             title: "Search the vendor directory",
             description:
                 "Search publicly listed post-production facilities, distribution vendors and creative companies. " +
-                "Filter by free text, by place slug (from list_places) and by service uuid (from list_services). " +
+                "Filter by free text, by place slug (from list_places), by service uuid (from list_services) and by " +
+                "`companyType` (freelance creatives or everyone else). " +
                 "To find vendors somewhere, prefer `place`; a `query` naming a place is treated as one anyway, and " +
                 "the response reports it as `resolvedPlace`. Results are paginated; when `hasMore` is true, call " +
                 "again with the returned `nextOffset`.",
@@ -52,6 +60,10 @@ export function registerDirectoryTools(server: McpServer) {
                     .describe("Free text matched against facility and company names, or a place name"),
                 place: z.string().optional().describe("A place slug from list_places"),
                 service: z.string().optional().describe("A service uuid from list_services"),
+                companyType: z
+                    .enum(DIRECTORY_COMPANY_TYPES)
+                    .optional()
+                    .describe("freelancers for freelance creatives only, facilities for everyone else; all by default"),
                 offset: z.number().int().min(0).optional().describe("Result offset for pagination"),
                 locale: LOCALE_ARG,
             }),
@@ -62,7 +74,7 @@ export function registerDirectoryTools(server: McpServer) {
                 nextOffset: z.number().nullable(),
             }),
         },
-        async ({ query, place, service, offset, locale }) => {
+        async ({ query, place, service, companyType, offset, locale }) => {
             // A query that names a place becomes the place filter, and stops being a name search —
             // keeping both would AND them together and return nothing, which is the very failure
             // this resolves.
@@ -72,6 +84,7 @@ export function registerDirectoryTools(server: McpServer) {
                 query: resolved ? undefined : query,
                 placeSlug: place ?? resolved?.slug,
                 serviceUuid: service,
+                companyType,
                 offset,
             });
 

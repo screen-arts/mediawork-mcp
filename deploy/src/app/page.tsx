@@ -1,5 +1,5 @@
 const TOOLS: { name: string; description: string }[] = [
-    { name: "search_facilities", description: "Search the vendor directory by text, place or service" },
+    { name: "search_facilities", description: "Search the vendor directory by text, place, service or company type" },
     { name: "get_facility", description: "One vendor's full profile, including its creatives" },
     { name: "list_places", description: "Cities, states and countries with listed vendors" },
     { name: "list_services", description: "The service categories vendors are filtered by" },

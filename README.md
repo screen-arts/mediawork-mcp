@@ -35,7 +35,7 @@ Anything that takes a JSON config:
 | --- | --- |
 | `search` | One query across the directory, FAQ and blog, returning `{id, title, url}` |
 | `fetch` | Read one record in full, by an `id` from `search` |
-| `search_facilities` | The vendor directory, filtered by service and place |
+| `search_facilities` | The vendor directory, filtered by service, place and company type (freelancers or facilities) |
 | `get_facility` | A vendor's full public profile |
 | `list_services` | The service taxonomy, for resolving a filter |
 | `list_places` | Cities, states and countries with vendors in them |

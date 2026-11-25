@@ -85,6 +85,11 @@ export type Service = { uuid: string; name: string };
 
 export type DirectoryList = { facilities: FacilityCard[]; hasMore: boolean };
 
+/** The app's `type` filter: freelance creatives, every other vendor, or both. */
+export const DIRECTORY_COMPANY_TYPES = ["all", "freelancers", "facilities"] as const;
+
+export type DirectoryCompanyType = (typeof DIRECTORY_COMPANY_TYPES)[number];
+
 /** The app fixes the directory page size; mirrored here so tools can report the next offset. */
 export const DIRECTORY_PAGE_SIZE = 24;
 
@@ -92,6 +97,7 @@ export async function searchFacilities(options: {
     query?: string;
     placeSlug?: string;
     serviceUuid?: string;
+    companyType?: DirectoryCompanyType;
     offset?: number;
 }): Promise<DirectoryList> {
     "use cache";
@@ -103,6 +109,7 @@ export async function searchFacilities(options: {
     if (options.query) params.set("q", options.query);
     if (options.placeSlug) params.set("place", options.placeSlug);
     if (options.serviceUuid) params.set("service", options.serviceUuid);
+    if (options.companyType && options.companyType !== "all") params.set("type", options.companyType);
     if (options.offset) params.set("offset", String(options.offset));
 
     return getJson<DirectoryList>(`${APP_API_URL}/api/www/directory/facilities?${params}&${bust()}`);
