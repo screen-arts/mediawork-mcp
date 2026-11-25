@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getBlogPost, getBlogPosts, getFaq, getProducts } from "@/lib/content-api";
 import { getFacility, getPlaces, searchFacilities } from "@/lib/directory-api";
 import { blogPostUrl, facilityUrl, faqUrl, placeUrl, pricingUrl } from "@/lib/links";
+import { FETCHED_RECORD, SEARCH_RESULTS } from "@/mcp/output";
 import { matchPlaceQuery } from "@/mcp/place-query";
 import { blogId, facilityId, faqId, parseResourceId, placeId, planId } from "@/mcp/resolve";
 import { shapeBlogPost, shapeFacilityCard, shapeFacilityProfile, shapeProducts } from "@/mcp/shape";
@@ -30,6 +31,7 @@ export function registerSearchTools(server: McpServer) {
                 "If your client supports them, the dedicated tools (search_facilities, search_faq, …) give " +
                 "richer, filterable results.",
             inputSchema: z.object({ query: z.string().describe("What to search for") }),
+            outputSchema: SEARCH_RESULTS,
         },
         async ({ query }) => json({ results: await searchEverything(query) }),
     );
@@ -40,6 +42,7 @@ export function registerSearchTools(server: McpServer) {
             title: "Fetch a Mediawork record",
             description: "Retrieve the full contents of one record by the `id` returned from `search`.",
             inputSchema: z.object({ id: z.string().describe("An id from a search result") }),
+            outputSchema: FETCHED_RECORD,
         },
         async ({ id }) => {
             const document = await fetchById(id);

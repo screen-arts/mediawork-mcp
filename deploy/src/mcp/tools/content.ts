@@ -2,6 +2,7 @@ import "server-only";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { getBlogPost, getBlogPosts, getFaq, getPlans } from "@/lib/content-api";
+import { BLOG_CARD, BLOG_POST, FAQ, PLAN, PLAN_COMPARISON } from "@/mcp/output";
 import { shapeBlogCard, shapeBlogPost, shapeComparison, shapeFaq, shapeProducts } from "@/mcp/shape";
 import { json, LOCALE_ARG, notFound } from "@/mcp/tools/common";
 
@@ -17,6 +18,7 @@ export function registerContentTools(server: McpServer) {
                 query: z.string().optional().describe("Matched against both questions and answers"),
                 locale: LOCALE_ARG,
             }),
+            outputSchema: FAQ,
         },
         async ({ query, locale }) => json({ faq: shapeFaq(await getFaq(locale), query, locale) }),
     );
@@ -29,6 +31,7 @@ export function registerContentTools(server: McpServer) {
                 "Published posts from the Mediawork blog, newest first. Use get_blog_post with a returned `slug` " +
                 "to read one in full.",
             inputSchema: z.object({ locale: LOCALE_ARG }),
+            outputSchema: z.object({ posts: z.array(BLOG_CARD) }),
         },
         async ({ locale }) => json({ posts: (await getBlogPosts()).map((post) => shapeBlogCard(post, locale)) }),
     );
@@ -42,6 +45,7 @@ export function registerContentTools(server: McpServer) {
                 slug: z.string().describe("From a list_blog_posts result"),
                 locale: LOCALE_ARG,
             }),
+            outputSchema: BLOG_POST,
         },
         async ({ slug, locale }) => {
             const post = await getBlogPost(slug);
@@ -65,6 +69,7 @@ export function registerContentTools(server: McpServer) {
                 currency: z.string().optional().describe("ISO currency code, e.g. USD, GBP, EUR"),
                 locale: LOCALE_ARG,
             }),
+            outputSchema: z.object({ plans: z.array(PLAN), comparison: PLAN_COMPARISON }),
         },
         async ({ currency, locale }) => {
             const { products, comparison } = await getPlans(locale);

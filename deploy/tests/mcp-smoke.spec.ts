@@ -34,16 +34,21 @@ async function connect() {
     return client;
 }
 
-/** Every tool answers with a single text block; this is the payload every assertion reads. */
+/** Every tool answers with one object, as structuredContent and as its JSON text; the two must agree. */
 async function callJson(client: Client, name: string, args: Record<string, unknown> = {}) {
     const result = (await client.callTool({ name, arguments: args })) as {
         isError?: boolean;
         content: { type: string; text: string }[];
+        structuredContent?: unknown;
     };
 
     expect(result.isError, `${name} returned an error: ${result.content?.[0]?.text}`).toBeFalsy();
 
-    return JSON.parse(result.content[0].text);
+    const parsed = JSON.parse(result.content[0].text);
+
+    expect(result.structuredContent, `${name} sent no structuredContent`).toEqual(parsed);
+
+    return parsed;
 }
 
 test("initializes and advertises every tool", async () => {
@@ -58,6 +63,7 @@ test("initializes and advertises every tool", async () => {
     // A tool with no description is a tool a model will not reach for.
     for (const tool of tools) {
         expect(tool.description, `${tool.name} has no description`).toBeTruthy();
+        expect(tool.outputSchema?.type, `${tool.name} advertises no outputSchema`).toBe("object");
     }
 
     await client.close();

@@ -2,6 +2,7 @@ import "server-only";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { DIRECTORY_PAGE_SIZE, getFacility, getPlaces, getServices, searchFacilities } from "@/lib/directory-api";
+import { FACILITY_CARD, FACILITY_PROFILE, PLACE, SERVICE } from "@/mcp/output";
 import { matchPlaceQuery } from "@/mcp/place-query";
 import { shapeFacilityCard, shapeFacilityProfile, shapePlace, shapeService } from "@/mcp/shape";
 import { json, LOCALE_ARG, notFound } from "@/mcp/tools/common";
@@ -16,6 +17,7 @@ export function registerDirectoryTools(server: McpServer) {
                 "Each has a uuid — pass it as `service` to search_facilities to filter the directory to vendors " +
                 "offering that service. Call this first when a question is about a kind of work.",
             inputSchema: z.object({ locale: LOCALE_ARG }),
+            outputSchema: z.object({ services: z.array(SERVICE) }),
         },
         async ({ locale }) => json({ services: (await getServices(locale)).map(shapeService) }),
     );
@@ -28,6 +30,7 @@ export function registerDirectoryTools(server: McpServer) {
                 "Cities, states and countries that have at least one vendor listed, with a count of how many. " +
                 "Use a place `slug` as the `place` argument to search_facilities.",
             inputSchema: z.object({ locale: LOCALE_ARG }),
+            outputSchema: z.object({ places: z.array(PLACE) }),
         },
         async ({ locale }) => json({ places: (await getPlaces()).map((place) => shapePlace(place, locale)) }),
     );
@@ -51,6 +54,12 @@ export function registerDirectoryTools(server: McpServer) {
                 service: z.string().optional().describe("A service uuid from list_services"),
                 offset: z.number().int().min(0).optional().describe("Result offset for pagination"),
                 locale: LOCALE_ARG,
+            }),
+            outputSchema: z.object({
+                facilities: z.array(FACILITY_CARD),
+                resolvedPlace: z.object({ name: z.string(), type: z.string(), slug: z.string() }).optional(),
+                hasMore: z.boolean(),
+                nextOffset: z.number().nullable(),
             }),
         },
         async ({ query, place, service, offset, locale }) => {
@@ -90,6 +99,7 @@ export function registerDirectoryTools(server: McpServer) {
                 facilitySlug: z.string().describe("From a search_facilities result"),
                 locale: LOCALE_ARG,
             }),
+            outputSchema: FACILITY_PROFILE,
         },
         async ({ companySlug, facilitySlug, locale }) => {
             const profile = await getFacility(companySlug, facilitySlug);

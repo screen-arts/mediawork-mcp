@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { BlogPost, FaqCategory, Product } from "@/lib/content-api";
 import type { FacilityCard, FacilityProfile } from "@/lib/directory-api";
+import { BLOG_POST, FACILITY_CARD, FACILITY_PROFILE, FAQ, PLAN, PLAN_COMPARISON } from "@/mcp/output";
 import {
     shapeBlogPost,
     shapeComparison,
@@ -332,5 +333,42 @@ describe("shapeBlogPost", () => {
 
     it("carries the canonical post url", () => {
         expect(shapeBlogPost(post).url).toBe("https://www.mediawork.io/blog/introducing-mediawork");
+    });
+});
+
+describe("the shapes match the advertised output schemas", () => {
+    it("for the directory", () => {
+        expect(FACILITY_CARD.safeParse(shapeFacilityCard(card)).success).toBe(true);
+        expect(FACILITY_PROFILE.safeParse(shapeFacilityProfile(profile)).success).toBe(true);
+    });
+
+    it("for the FAQ, with and without a query", () => {
+        expect(FAQ.safeParse({ faq: shapeFaq(faq, undefined) }).success).toBe(true);
+        expect(FAQ.safeParse({ faq: shapeFaq(faq, "quote") }).success).toBe(true);
+    });
+
+    it("for plans and the comparison", () => {
+        expect(PLAN.array().safeParse(shapeProducts(products, undefined)).success).toBe(true);
+        expect(PLAN.array().safeParse(shapeProducts(products, "GBP")).success).toBe(true);
+
+        const comparison = shapeComparison(
+            [
+                {
+                    title: "Quoting",
+                    features: [{ label: "Quote templates", tooltip: null, values: {} }],
+                },
+            ],
+            products,
+        );
+
+        expect(PLAN_COMPARISON.safeParse(comparison).success).toBe(true);
+    });
+
+    it("for a blog post", () => {
+        expect(BLOG_POST.safeParse(shapeBlogPost(post)).success).toBe(true);
+    });
+
+    it("refuses a shape it does not describe", () => {
+        expect(FACILITY_CARD.safeParse({ name: "No url" }).success).toBe(false);
     });
 });

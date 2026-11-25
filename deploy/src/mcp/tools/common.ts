@@ -2,11 +2,11 @@ import "server-only";
 import { z } from "zod";
 
 /**
- * Tool results travel as text. JSON is the densest readable encoding for structured data and models
- * parse it reliably, so every tool returns one pretty-printed object rather than prose.
+ * Every tool returns one object: as `structuredContent`, validated against the tool's `outputSchema`,
+ * and pretty-printed as text for a client that reads only `content`.
  */
-export function json(value: unknown) {
-    return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }] };
+export function json<T extends Record<string, unknown>>(value: T) {
+    return { content: [{ type: "text" as const, text: JSON.stringify(value, null, 2) }], structuredContent: value };
 }
 
 export function text(value: string) {
