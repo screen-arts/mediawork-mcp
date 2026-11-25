@@ -1,5 +1,5 @@
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
-import { expect, test } from "@playwright/test";
+import { type APIRequestContext, expect, test } from "@playwright/test";
 
 /**
  * Drives the server with the official MCP client over Streamable HTTP, rather than hand-rolled
@@ -61,6 +61,46 @@ test("initializes and advertises every tool", async () => {
     }
 
     await client.close();
+});
+
+/** A bare 2026-07-28 request: no `initialize`, everything per request in headers and `_meta`. */
+async function modernRequest(request: APIRequestContext, method: string) {
+    const response = await request.post(MCP_URL, {
+        headers: {
+            "content-type": "application/json",
+            accept: "application/json, text/event-stream",
+            "MCP-Protocol-Version": "2026-07-28",
+            "Mcp-Method": method,
+        },
+        data: {
+            jsonrpc: "2.0",
+            id: 1,
+            method,
+            params: {
+                _meta: {
+                    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+                    "io.modelcontextprotocol/clientInfo": { name: "mediawork-smoke", version: "0.1.0" },
+                    "io.modelcontextprotocol/clientCapabilities": {},
+                },
+            },
+        },
+    });
+
+    expect(response.ok(), `${method} answered ${response.status()}`).toBeTruthy();
+
+    const text = await response.text();
+    const json = text.trimStart().startsWith("{") ? text : (text.match(/^data: (.*)$/m)?.[1] ?? "");
+
+    return JSON.parse(json) as { result?: Record<string, unknown>; error?: unknown };
+}
+
+test("marks the tool list and discovery as publicly cacheable on 2026-07-28", async ({ request }) => {
+    for (const method of ["tools/list", "server/discover"]) {
+        const { result, error } = await modernRequest(request, method);
+
+        expect(error, `${method} errored`).toBeUndefined();
+        expect(result, method).toMatchObject({ ttlMs: 3_600_000, cacheScope: "public" });
+    }
 });
 
 test("chains places into a facility search and then a full profile", async () => {
