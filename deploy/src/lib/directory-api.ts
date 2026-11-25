@@ -68,6 +68,8 @@ export type FacilityProfile = FacilityCard & {
         avatar: DirectoryImage;
         services: string[];
     }[];
+    /** Absent from app releases that predate it. */
+    accreditations?: { uuid: string; name: string; slug: string; logo: DirectoryImage }[];
 };
 
 export type Place = {

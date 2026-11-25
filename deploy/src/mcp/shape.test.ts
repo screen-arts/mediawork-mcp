@@ -67,6 +67,14 @@ const profile: FacilityProfile = {
             services: ["Picture Post"],
         },
     ],
+    accreditations: [
+        {
+            uuid: "accreditation-uuid",
+            name: "Netflix Post Partner",
+            slug: "netflix-post-partner",
+            logo: { url: "https://uploads.mediawork.io/netflix.webp", width: 400, height: 160 },
+        },
+    ],
 };
 
 describe("shapeFacilityCard", () => {
@@ -115,6 +123,12 @@ describe("shapeFacilityProfile", () => {
         ]);
         // An empty collection is dropped entirely rather than shipped as [].
         expect(shaped).not.toHaveProperty("addresses");
+    });
+
+    it("lists accreditations by name, and tolerates an app that does not send them", () => {
+        expect(shapeFacilityProfile(profile).accreditations).toEqual(["Netflix Post Partner"]);
+        expect(shapeFacilityProfile({ ...profile, accreditations: undefined })).not.toHaveProperty("accreditations");
+        expect(shapeFacilityProfile({ ...profile, accreditations: [] })).not.toHaveProperty("accreditations");
     });
 
     it("drops the edit suite counts when neither is known", () => {

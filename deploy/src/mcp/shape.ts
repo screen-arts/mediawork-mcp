@@ -51,6 +51,7 @@ export function shapeFacilityProfile(profile: FacilityProfile, locale?: string) 
         ...shapeFacilityCard(profile, locale),
         website: profile.companyDomain,
         productionTypes: profile.productionTypes,
+        accreditations: profile.accreditations?.map((accreditation) => accreditation.name),
         editSuites: compactCounts(profile.numEditSuitesOnline, profile.numEditSuitesOffline),
         addresses: profile.addresses.map((address) =>
             compact({
